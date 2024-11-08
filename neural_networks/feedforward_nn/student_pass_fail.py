@@ -1,12 +1,13 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import time
-import utils
+from utils import math_utils
+from utils import displaying_nn_utils
+
 
 def is_student_pass_fail(sleep_hours, study_hours):
     student_data = np.array([sleep_hours, study_hours])
     student_final_input = np.dot(student_data, input_to_output_weights) + bias_output_weights
-    student_final_output = utils.sigmoid(student_final_input)
+    student_final_output = math_utils.sigmoid(student_final_input)
 
     print(f'Predicted probability of passing for the student with {sleep_hours} hours of sleeping and {study_hours} hours of studying is: {student_final_output[0][0]:.4f}')
 
@@ -54,13 +55,13 @@ start_time = time.perf_counter()
 for epoch in range(epochs):
     #Forward propagation
     final_input = np.dot(X, input_to_output_weights) + bias_output_weights
-    final_output = utils.sigmoid(final_input)
+    final_output = math_utils.sigmoid(final_input)
 
     error = y - final_output
-    mse_values.append(utils.mean_squared_error(y, final_output))
+    mse_values.append(math_utils.mean_squared_error(y, final_output))
 
     #Back propagation
-    d_final_output = error * utils.sigmoid_derivative(final_output) #Gradient matrix
+    d_final_output = error * math_utils.sigmoid_derivative(final_output) #Gradient matrix
 
     input_to_output_weights += np.dot(X.T, d_final_output) * learning_rate
     bias_output_weights += np.sum(d_final_output, axis=0, keepdims=True) * learning_rate
@@ -68,9 +69,7 @@ for epoch in range(epochs):
 end_time = time.perf_counter()
 training_time = end_time - start_time
 
-print(f'Training time: {training_time:.2f} secs')
-print(f'Result after {epochs} epochs:\n{final_output}')
-print('=====================================================================')
+displaying_nn_utils.print_result_nn(training_time, final_output, epochs)
 
 # plt.figure(figsize=(10, 5))
 # plt.plot(mse_values, label='MSE', color='blue')

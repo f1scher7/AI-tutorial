@@ -1,7 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-import utils
+from utils import math_utils
+from utils import displaying_nn_utils
+
 
 np.random.seed(42)
 
@@ -30,7 +32,7 @@ start_time = time.perf_counter()
 
 for epoch in range(epochs):
     hidden_input = np.dot(X, input_to_hidden_weights) + bias_hidden_weights
-    hidden_output = utils.sigmoid(hidden_input)
+    hidden_output = math_utils.sigmoid(hidden_input)
 
     # print(f'x:\n{x}')
     # print(f'input_to_hidden_weights:\n{input_to_hidden_weights}')
@@ -40,18 +42,18 @@ for epoch in range(epochs):
     # print(f'hidden_output:\n{hidden_output}')
 
     final_input = np.dot(hidden_output, hidden_to_output_weights) + bias_output_weights
-    final_output = utils.sigmoid(final_input)
+    final_output = math_utils.sigmoid(final_input)
 
     print(f'final_output:\n{final_output}')
 
     error = y - final_output
-    mse_values.append(utils.mean_squared_error(y, final_output))
+    mse_values.append(math_utils.mean_squared_error(y, final_output))
 
-    d_final_output = error * utils.sigmoid_derivative(final_output)
+    d_final_output = error * math_utils.sigmoid_derivative(final_output)
     print(f'd_final_output:\n{d_final_output}')
 
     error_hidden_layer = d_final_output.dot(hidden_to_output_weights.T)
-    d_hidden_output = error_hidden_layer * utils.sigmoid_derivative(hidden_output)
+    d_hidden_output = error_hidden_layer * math_utils.sigmoid_derivative(hidden_output)
 
     hidden_to_output_weights += hidden_output.T.dot(d_final_output) * learning_rate
     input_to_hidden_weights += X.T.dot(d_hidden_output) * learning_rate
@@ -66,9 +68,8 @@ for epoch in range(epochs):
 end_time = time.perf_counter()
 training_time = end_time - start_time
 
-# print(f'Training time: {training_time:.2f} secs')
-# print(f'Results after {epochs} epochs:\n{final_output}')
-#
+displaying_nn_utils.print_result_nn(training_time, final_output, epochs)
+
 plt.plot(mse_values)
 plt.title("MSE")
 plt.xlabel("Epochs")
