@@ -1,87 +1,29 @@
 import numpy as np
-import time
-from utils import math_utils
-from utils import displaying_nn_utils
+import feedforward_nn_core
 
+#First student: 3 hours of sleeping and 5 hours of studying
+X = np.array([[5, 1], [1, 5], [8, 0], [5, 2], [3, 3], [4, 4], [7, 3], [5, 3], [6, 2], [4, 5]])
+#0 - fail; 1 - pass
+y = np.array([[0], [0], [0], [0], [0], [1], [1], [1], [1], [1]])
 
-def is_student_pass_fail(sleep_hours, study_hours):
-    student_data = np.array([sleep_hours, study_hours])
-    student_final_input = np.dot(student_data, input_to_output_weights) + bias_output_weights
-    student_final_output = math_utils.sigmoid(student_final_input)
+epochs = 5000
+learning_rate = 0.1
 
-    print(f'Predicted probability of passing for the student with {sleep_hours} hours of sleeping and {study_hours} hours of studying is: {student_final_output[0][0]:.4f}')
+input_output_weights, bias_output_weights = feedforward_nn_core.train_feedforward_nn(X, y, epochs, learning_rate)
 
-    if student_final_output[0][0] >= 0.50:
+while True:
+    sleep_hours = int(input('Sleep hours: '))
+    study_hours = int(input('Study hours: '))
+
+    user_input = np.array([[sleep_hours, study_hours]])
+
+    nn_output = feedforward_nn_core.predict(user_input, input_output_weights, bias_output_weights)
+
+    print(f'Predicted probability of passing for the student with {sleep_hours} hours of sleeping and {study_hours} hours of studying is: {nn_output[0][0]:.4f}')
+
+    if nn_output[0][0] >= 0.50:
         print('Student Pass!')
     else:
         print('Student Fail!')
 
     print('=====================================================================')
-
-#First student: 3 hours of sleeping and 5 hours of studying
-X = np.array([[5, 1],
-              [8, 0],
-              [5, 2],
-              [3, 3],
-              [4, 4],
-              [7, 3],
-              [5, 3],
-              [6, 2],
-              [4, 5]])
-
-#0 - fail; 1 - pass
-y = np.array([[0],
-              [0],
-              [0],
-              [0],
-              [1],
-              [1],
-              [1],
-              [1],
-              [1]])
-
-input_to_output_weights = np.random.uniform(low=-1, high=1, size=(2, 1))
-bias_output_weights = np.random.uniform(low=-1, high=-1, size=(1, 1))
-
-np.random.seed(42)
-
-epochs = 5000
-learning_rate = 0.1
-
-mse_values = []
-
-start_time = time.perf_counter()
-
-for epoch in range(epochs):
-    #Forward propagation
-    final_input = np.dot(X, input_to_output_weights) + bias_output_weights
-    final_output = math_utils.sigmoid(final_input)
-
-    error = y - final_output
-    mse_values.append(math_utils.mean_squared_error(y, final_output))
-
-    #Back propagation
-    d_final_output = error * math_utils.sigmoid_derivative(final_output) #Gradient matrix
-
-    input_to_output_weights += np.dot(X.T, d_final_output) * learning_rate
-    bias_output_weights += np.sum(d_final_output, axis=0, keepdims=True) * learning_rate
-
-end_time = time.perf_counter()
-training_time = end_time - start_time
-
-displaying_nn_utils.print_result_nn(training_time, final_output, epochs)
-
-# plt.figure(figsize=(10, 5))
-# plt.plot(mse_values, label='MSE', color='blue')
-# plt.title('Mean Squared Error over Epochs')
-# plt.xlabel('Epochs')
-# plt.ylabel('MSE')
-# plt.legend()
-# plt.grid()
-# plt.show()
-
-while True:
-    student_sleep_hours = int(input('Sleep hours: '))
-    student_study_hours = int(input('Study hours: '))
-
-    is_student_pass_fail(student_sleep_hours, student_study_hours)
