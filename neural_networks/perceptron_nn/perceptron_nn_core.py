@@ -5,7 +5,7 @@ from utils import math_utils
 from utils import displaying_nn_utils
 
 
-def train_feedforward_nn(X_f, y_f, epochs_f, learning_rate_f):
+def train_perceptron_nn(X_f, y_f, epochs_f, learning_rate_f):
     np.random.seed(42)
 
     input_neurons = X_f.shape[1]
@@ -13,6 +13,7 @@ def train_feedforward_nn(X_f, y_f, epochs_f, learning_rate_f):
 
     input_to_output_weights = np.random.uniform(low=-1, high=1, size=(input_neurons, output_neurons))
     bias_output_weights = np.random.uniform(low=-1, high=1, size=(output_neurons, output_neurons))
+
     final_output = np.array([])
 
     mse_values = []
