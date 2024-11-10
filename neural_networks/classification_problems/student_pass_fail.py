@@ -2,9 +2,9 @@ import numpy as np
 import perceptron_nn_core
 
 #First student: 3 hours of sleeping and 5 hours of studying
-X = np.array([[5, 1], [1, 5], [8, 0], [5, 2], [3, 3], [4, 4], [7, 3], [5, 3], [6, 2], [4, 5]])
+X = np.array([[5, 1], [1, 5], [8, 0], [10, 0], [5, 2], [3, 3], [4, 4], [7, 3], [5, 3], [6, 2], [4, 5]])
 #0 - fail; 1 - pass
-y = np.array([[0], [0], [0], [0], [0], [1], [1], [1], [1], [1]])
+y = np.array([[0], [0], [0], [0], [0], [0], [1], [1], [1], [1], [1]])
 
 epochs = 5000
 learning_rate = 0.1
