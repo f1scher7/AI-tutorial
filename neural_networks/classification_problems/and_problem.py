@@ -1,8 +1,9 @@
 import numpy as np
-import perceptron_nn_core
+
+from neural_networks.nn_types_impl import perceptron_nn_core
 
 
-# data for AND problem
+# Data for AND problem
 X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 y = np.array([[0], [0], [0], [1]])
 
@@ -19,7 +20,7 @@ while True:
 
     user_input = np.array([[a, b]])
 
-    nn_output = perceptron_nn_core.predict(user_input, input_to_output_weights, bias_output_weights)
+    nn_output = perceptron_nn_core.predict_perceptron_nn(user_input, input_to_output_weights, bias_output_weights)
 
     print(f'AND({a}, {b}) = {nn_output[0][0]:.4f}')
     print("=====================================================================")
