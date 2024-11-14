@@ -2,10 +2,11 @@ import numpy as np
 
 from time import perf_counter
 from utils import math_utils
-from utils import displaying_nn_utils
 
 
-def train_single_layer_nn(X_f, y_f, hidden_neurons_f, epochs_f, learning_rate_f):
+def train_single_layer_nn(X_f, y_f, hidden_neurons_f, epochs_f, learning_rate_f, plot_f):
+    from utils import displaying_nn_utils
+
     np.random.seed(42)
 
     input_neurons = X_f.shape[1]
@@ -49,6 +50,12 @@ def train_single_layer_nn(X_f, y_f, hidden_neurons_f, epochs_f, learning_rate_f)
 
         bias_output_weights += np.sum(output_gradient, axis=0, keepdims=True)
         bias_hidden_weights += np.sum(hidden_gradient, axis=0, keepdims=True)
+
+        if plot_f is not None:
+            displaying_nn_utils.plot_decision_boundary(X_f, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights,bias_output_weights, epoch, plot_f)
+            plot_f.pause(0.01)
+
+    plot_f.show()
 
     end_time = perf_counter()
     training_time = end_time - start_time
