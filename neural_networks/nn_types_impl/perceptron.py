@@ -3,7 +3,7 @@ import numpy as np
 from time import perf_counter
 from utils.math.activation_funcs import activation_func
 from utils.math.activation_funcs import activation_derivative_func
-from utils.math.cost_funcs import *
+from utils.math.cost import *
 from utils.visualisation import *
 
 
@@ -15,7 +15,7 @@ def train_perceptron_nn(x, y, epochs, learning_rate):
     output_neurons = y.shape[1]
 
     input_to_output_weights = np.random.uniform(low=-1, high=1, size=(input_neurons, output_neurons))
-    bias_output_weights = np.random.uniform(low=-1, high=1, size=(1, output_neurons))
+    bias_output_weights = np.zeros((1, output_neurons))
 
     final_nn_output = np.array([])
     mse_values = []
