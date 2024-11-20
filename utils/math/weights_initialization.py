@@ -1,5 +1,9 @@
 import numpy as np
 
+
+np.random.seed(42)
+
+
 def weights_initialization_func(shape, func_name):
     return weights_initialization_funcs[func_name](shape)
 
