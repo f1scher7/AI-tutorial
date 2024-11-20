@@ -2,7 +2,8 @@ import numpy as np
 import matplotlib
 
 from matplotlib import pyplot as plt
-from neural_networks.nn_types_impl.single_layer_nn_core import predict_single_layer_nn
+from neural_networks.nn_types_impl.single_layer import predict_single_layer_nn
+
 
 def create_window_plot(window_title, size_x, size_y):
     matplotlib.use('TkAgg')
@@ -15,14 +16,14 @@ def create_window_plot(window_title, size_x, size_y):
     return plt
 
 
-def plot_decision_boundary(x, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, epoch, plot):
+def plot_decision_boundary(x, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hid_act_func_name, out_act_func_name, epoch, plot):
     x_min, x_max = x[:, 0].min() - 1, x[:, 0].max() + 1
     y_min, y_max = x[:, 1].min() - 1, x[:, 1].max() + 1
 
     xx, yy = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
     grid_points = np.c_[xx.ravel(), yy.ravel()]
 
-    grid_preds = predict_single_layer_nn(grid_points, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights)
+    grid_preds = predict_single_layer_nn(grid_points, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hid_act_func_name, out_act_func_name)
     zz = grid_preds.reshape(xx.shape)
 
     if hasattr(plot, 'contour_line'):
