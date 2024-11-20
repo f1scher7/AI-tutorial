@@ -3,11 +3,11 @@ import numpy as np
 from time import perf_counter
 from utils.math.activation_funcs import activation_func
 from utils.math.activation_funcs import activation_derivative_func
-from utils.math.weights_initialization import *
-from utils.math.cost import *
+from utils.math.weights_initialization import weights_initialization_func
+from utils.math.cost import cost_func
 
 
-def train_single_layer_nn(x, y, epochs, learning_rate_f, hidden_neurons, in_to_hid_init_name, hid_to_out_init_name, hid_act_func_name, out_act_func_name, plot):
+def train_single_layer_nn(x, y, epochs, learning_rate, hidden_neurons, in_to_hid_init_name, hid_to_out_init_name, hid_act_func_name, out_act_func_name, plot):
     from utils.visualisation import plot_mse, plot_decision_boundary, print_result_nn
 
     np.random.seed(42)
@@ -48,17 +48,18 @@ def train_single_layer_nn(x, y, epochs, learning_rate_f, hidden_neurons, in_to_h
         hidden_gradient = hidden_error * activation_derivative_func(hidden_activated, hid_act_func_name)
 
         # Updating weights and biases
-        hidden_to_output_weights += np.dot(hidden_activated.T, output_gradient) * learning_rate_f
-        input_to_hidden_weights += np.dot(x.T, hidden_gradient) * learning_rate_f
+        hidden_to_output_weights += np.dot(hidden_activated.T, output_gradient) * learning_rate
+        input_to_hidden_weights += np.dot(x.T, hidden_gradient) * learning_rate
 
-        bias_output_weights += np.sum(output_gradient, axis=0, keepdims=True)
-        bias_hidden_weights += np.sum(hidden_gradient, axis=0, keepdims=True)
+        bias_output_weights += np.sum(output_gradient, axis=0, keepdims=True) * learning_rate
+        bias_hidden_weights += np.sum(hidden_gradient, axis=0, keepdims=True) * learning_rate
 
         if plot is not None:
             plot_decision_boundary(x, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hid_act_func_name, out_act_func_name, epoch, plot)
             plot.pause(0.01)
 
-    plot.show()
+    if plot is not None:
+        plot.show()
 
     end_time = perf_counter()
     training_time = end_time - start_time
