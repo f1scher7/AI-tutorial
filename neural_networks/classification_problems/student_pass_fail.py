@@ -24,7 +24,7 @@ fail_points = plot.scatter(X[y.ravel() == 0, 0], X[y.ravel() == 0, 1], c="red", 
 
 plot.xlabel('Hours of sleeping')
 plot.ylabel('Hours of studying')
-plot.title('Training data plot for student_pass_fail problem')
+plot.title('Training data plot for zstudent_pass_fail problem')
 plot.legend(loc="upper right")
 plot.grid(True, zorder=0)
 

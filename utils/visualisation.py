@@ -15,7 +15,6 @@ def create_window_plot(window_title, size_x, size_y):
 
     return plt
 
-
 def plot_decision_boundary(x, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hid_act_func_name, out_act_func_name, epoch, plot):
     x_min, x_max = x[:, 0].min() - 1, x[:, 0].max() + 1
     y_min, y_max = x[:, 1].min() - 1, x[:, 1].max() + 1
@@ -34,8 +33,10 @@ def plot_decision_boundary(x, input_to_hidden_weights, hidden_to_output_weights,
     plot.suptitle(f"Epoch {epoch + 1}")
     plot.draw()
 
-
 def plot_mse(mse_values):
+    fig_manager = plt.get_current_fig_manager()
+    fig_manager.set_window_title('MSE')
+
     plt.plot(mse_values, label='MSE', color='blue')
     plt.title('Mean Squared Error over Epochs')
     plt.ylabel('MSE')
@@ -43,7 +44,6 @@ def plot_mse(mse_values):
     plt.legend()
     plt.grid()
     plt.show()
-
 
 def print_result_nn(final_output, epochs, training_time):
     print(f'Training time: {training_time:.2f} secs')
