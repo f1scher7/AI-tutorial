@@ -21,14 +21,14 @@ plot.grid(True, zorder=0)
 
 
 epochs = 5000
-learning_rate = 0.01
-hidden_neurons = 4 # for single layer nn
-input_to_hidden_weights_init_name = 'random'
-hidden_to_output_weights_init_name = 'random'
+learning_rate = 0.1
+hidden_neurons = 32 # for single layer nn
+input_to_hidden_weights_init_name = 'he'
+hidden_to_output_weights_init_name = 'he'
 hidden_activation_func_name = 'relu'
 output_activation_func_name = 'relu'
 
-input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights = single_layer.train_single_layer_nn(X, y, epochs, learning_rate, hidden_neurons, input_to_hidden_weights_init_name, hidden_to_output_weights_init_name, hidden_activation_func_name, output_activation_func_name, plot)
+input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights = single_layer.train_single_layer_nn(X, y, epochs, learning_rate, hidden_neurons, input_to_hidden_weights_init_name, hidden_to_output_weights_init_name, hidden_activation_func_name, output_activation_func_name, None)
 
 print('XOR problem')
 

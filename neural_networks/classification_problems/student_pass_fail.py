@@ -24,18 +24,18 @@ fail_points = plot.scatter(X[y.ravel() == 0, 0], X[y.ravel() == 0, 1], c="red", 
 
 plot.xlabel('Hours of sleeping')
 plot.ylabel('Hours of studying')
-plot.title('Training data plot for zstudent_pass_fail problem')
+plot.title('Training data plot for student_pass_fail problem')
 plot.legend(loc="upper right")
 plot.grid(True, zorder=0)
 
 
 epochs = 5000
-learning_rate = 0.01
-hidden_neurons = 4  # for single layer nn
-input_to_hidden_weights_init_name = 'random'
-hidden_to_output_weights_init_name = 'random'
-hidden_activation_func_name = 'relu'
-output_activation_func_name = 'relu'
+learning_rate = 0.1
+hidden_neurons = 8  # for single layer nn
+input_to_hidden_weights_init_name = 'xavier'
+hidden_to_output_weights_init_name = 'xavier'
+hidden_activation_func_name = 'sigmoid'
+output_activation_func_name = 'sigmoid'
 
 # input_output_weights, bias_output_weights = perceptron_nn_core.train_perceptron_nn(X, y, epochs, learning_rate)
 input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights = single_layer.train_single_layer_nn(X, y, epochs, learning_rate, hidden_neurons, input_to_hidden_weights_init_name, hidden_to_output_weights_init_name, hidden_activation_func_name, output_activation_func_name, plot)
