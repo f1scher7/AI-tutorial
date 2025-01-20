@@ -9,11 +9,15 @@ def activation_derivative_func(x, func_name):
 
 
 activation_funcs = {
-    'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
     'relu': lambda x: np.maximum(x, 0),
+    'sigmoid': lambda x: 1 / (1 + np.exp(-x)),
+    'tanh': lambda x: np.tanh(x)
 }
 
 activation_derivative_funcs = {
-    'sigmoid': lambda x: x * (1 - x),
     'relu': lambda x: (x > 0).astype(float),
+    'sigmoid': lambda x: x * (1 - x),
+    'sigmoid_raw': lambda x: activation_funcs['sigmoid'](x) * (1 - activation_funcs['sigmoid'](x)),
+    'tanh': lambda x: 1 - x * x,
+    'tanh_raw': lambda x: 1 - np.tanh(x) ** 2
 }
