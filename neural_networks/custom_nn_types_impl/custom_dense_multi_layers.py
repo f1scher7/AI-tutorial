@@ -1,10 +1,14 @@
 import numpy as np
 
 from time import perf_counter
-from utils.math.activation_funcs import activation_func
-from utils.math.activation_funcs import activation_derivative_func
+from utils.math.activation_funcs import activation_func, activation_derivative_func
 from utils.math.weights_initialization import weights_initialization_func
-from utils.math.cost import cost_func
+from utils.math.cost import cost_func, cost_derivative_func
+
+
+class CustomDenseMultiLayers:
+
+    def __init__(self, ):
 
 
 def train_single_layer_nn(x, y, epochs, learning_rate, hidden_neurons, in_to_hid_init_name, hid_to_out_init_name, hid_act_func_name, out_act_func_name, plot):
