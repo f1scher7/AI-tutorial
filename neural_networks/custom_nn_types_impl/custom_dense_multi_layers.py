@@ -1,14 +1,82 @@
 import numpy as np
-
 from time import perf_counter
 from utils.math.activation_funcs import activation_func, activation_derivative_func
 from utils.math.weights_initialization import weights_initialization_func
+from utils.math.biases_initialization import biases_initialization_func
 from utils.math.cost import cost_func, cost_derivative_func
 
 
-class CustomDenseMultiLayers:
+class CustomDenseMultiLayerNN:
 
-    def __init__(self, ):
+    def __init__(self, problem_name, input_data, target, hidden_neurons_list, activation_funcs_list,
+                 weights_initialization_types, epochs, learning_rate, momentum=0.9, reg_type=None, reg_lambda=0.1):
+
+        self.problem_name = problem_name
+        self.input_data = input_data
+        self.target = target
+        self.hidden_neurons_list = hidden_neurons_list
+        self.activation_funcs_list = activation_funcs_list
+        self.weights_initialization_types = weights_initialization_types
+        self.epochs = epochs
+        self.learning_rate = learning_rate
+        self.momentum = momentum
+        self.reg_type = reg_type
+        self.reg_lambda = reg_lambda
+
+        self.batch_size = input_data.shape[0]
+        self.sequence_len = input_data.shape[1]
+        self.features_size = input_data.shape[2]
+
+        self.num_hidden_layers = len(hidden_neurons_list)
+
+        self.weights = []
+        self.biases = []
+
+        # adding weights for input -> hidden1 layer
+        self.weights.append(weights_initialization_func((self.input_data.shape[1], hidden_neurons_list[0]), self.weights_initialization_types[0]))
+        self.biases.append(biases_initialization_func(self.hidden_neurons_list[0], self.activation_funcs_list[0]))
+
+        if self.num_hidden_layers > 1:
+            for layer_idx in range(1, self.num_hidden_layers):
+                self.weights.append(weights_initialization_func((self.hidden_neurons_list[layer_idx - 1], self.hidden_neurons_list[layer_idx]), weights_initialization_types[layer_idx]))
+                self.biases.append(np.zeros(self.hidden_neurons_list[layer_idx]))
+
+        # adding weights and biases for hidden_last -> output layer
+        self.weights.append(weights_initialization_func((hidden_neurons_list[-1], self.target.shape[1]), weights_initialization_types[-1]))
+        self.biases.append(biases_initialization_func(self.target.shape[1], self.activation_funcs_list[-1]))
+
+        self.velocity_weights = [np.zeros_like(w) for w in self.weights]
+        self.velocity_biases = [np.zeros_like(b) for b in self.biases]
+
+
+    def forward(self):
+        activated_outputs = []
+
+        for i in range(self.sequence_len):
+            prev_activated_layer = self.input_data[i]
+
+            for layer_idx in range(self.num_hidden_layers):
+                raw_layer = np.dot(prev_activated_layer, self.weights[layer_idx]) + self.biases[layer_idx]
+                activated_layer = activation_func(raw_layer, self.activation_funcs_list[layer_idx])
+
+                prev_activated_layer = activated_layer
+
+            raw_output = np.dot(prev_activated_layer, self.weights[-1]) + self.biases[-1]
+            activated_output = activation_func(raw_output, self.activation_funcs_list[-1])
+
+            activated_outputs.append(activated_output)
+
+        return activated_outputs
+
+
+
+
+
+
+
+
+
+
 
 
 def train_single_layer_nn(x, y, epochs, learning_rate, hidden_neurons, in_to_hid_init_name, hid_to_out_init_name, hid_act_func_name, out_act_func_name, plot):
