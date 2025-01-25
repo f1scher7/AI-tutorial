@@ -18,5 +18,5 @@ training_loss_funcs = {
 
 # for back propagation
 training_loss_derivative_funcs = {
-    'mse': lambda y_true, y_pred: -2 * (y_pred - y_true) / y_true.shape[0]
+    'mse': lambda y_true, y_pred: 2 * (y_pred - y_true) / y_true.shape[0]
 }
