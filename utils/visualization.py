@@ -3,11 +3,11 @@ import matplotlib
 from matplotlib import pyplot as plt
 
 
-def plot_training_losses(training_loss_function_name, training_losses):
+def plot_training_losses(problem_name, training_loss_function_name, training_losses):
     matplotlib.use('TkAgg')
 
     fig_manager = plt.get_current_fig_manager()
-    fig_manager.set_window_title(training_loss_function_name.upper())
+    fig_manager.set_window_title(problem_name)
 
     plt.plot(training_losses, label='Losses', color='blue')
     plt.title(f'{training_loss_function_name.upper()} Loss over Epochs')
@@ -21,7 +21,7 @@ def plot_training_losses(training_loss_function_name, training_losses):
 def print_training_logs_nn(nn_name, epoch, epochs, training_loss, training_loss_function_name):
     print(nn_name)
     print(f'Epoch: {epoch}/{epochs}')
-    print(f'Training loss ({training_loss_function_name}): {training_loss}')
+    print(f'Training loss ({training_loss_function_name}): {training_loss:.5f}')
     print("=====================================================================")
 
 
