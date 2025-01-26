@@ -5,21 +5,27 @@ from utils.math.weights_initialization import weights_initialization_func
 from utils.math.biases_initialization import biases_initialization_func
 from utils.math.loss import training_loss_func, training_loss_derivative_func
 from utils.visualisation import print_training_logs_nn, plot_training_losses
-from utils.utils import save_nn_model
+from utils.utils import save_nn_model, load_saved_nn_model
 
 
 class CustomDenseMultiLayerNN:
 
-    def __init__(self, problem_name, input_data, target, hidden_neurons_list, activation_funcs_list,
-                 weights_initialization_types_list, training_loss_function_name, epochs, learning_rate, momentum=0.9, reg_type=None, reg_lambda=0.1):
+    def __init__(self, problem_name, input_data_norm, target_norm, data_normalization_type, normalization_params,
+                 hidden_neurons_list, activation_funcs_list, weights_initialization_types_list,
+                 training_loss_func_name, epochs, learning_rate, momentum=0.9, reg_type=None, reg_lambda=0.1):
 
         self.problem_name = problem_name
-        self.input_data = input_data
-        self.target = target
+        self.input_data_norm = input_data_norm
+        self.target_norm = target_norm
+
+        self.data_normalization_type = data_normalization_type
+        self.normalization_params = normalization_params
+
         self.hidden_neurons_list = hidden_neurons_list
         self.activation_funcs_list = activation_funcs_list
         self.weights_initialization_types_list = weights_initialization_types_list
-        self.training_loss_function_name = training_loss_function_name
+
+        self.training_loss_func_name = training_loss_func_name
 
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -27,9 +33,9 @@ class CustomDenseMultiLayerNN:
         self.reg_type = reg_type
         self.reg_lambda = reg_lambda
 
-        self.batch_size = input_data.shape[0]
-        self.sequence_len = input_data.shape[1]
-        self.features_size = input_data.shape[2]
+        self.batch_size = input_data_norm.shape[0] if input_data_norm is not None else 1
+        self.sequence_len = input_data_norm.shape[1] if input_data_norm is not None else None
+        self.features_size = input_data_norm.shape[2] if input_data_norm is not None else None
 
         self.num_hidden_layers = len(hidden_neurons_list)
 
@@ -38,7 +44,7 @@ class CustomDenseMultiLayerNN:
         self.training_losses = []
 
         # adding weights for input -> hidden1 layer
-        self.weights.append(weights_initialization_func((self.sequence_len, hidden_neurons_list[0]), self.weights_initialization_types_list[0]))
+        self.weights.append(weights_initialization_func((self.features_size, hidden_neurons_list[0]), self.weights_initialization_types_list[0]))
         self.biases.append(biases_initialization_func(self.hidden_neurons_list[0], self.activation_funcs_list[0]))
 
         if self.num_hidden_layers > 1:
@@ -47,10 +53,36 @@ class CustomDenseMultiLayerNN:
                 self.biases.append(np.zeros(self.hidden_neurons_list[layer_idx]))
 
         # adding weights and biases for hidden_last -> output layer
-        self.weights.append(weights_initialization_func((hidden_neurons_list[-1], self.target.shape[1]), weights_initialization_types_list[-1]))
-        self.biases.append(biases_initialization_func(self.target.shape[1], self.activation_funcs_list[-1]))
+        self.weights.append(weights_initialization_func((hidden_neurons_list[-1], self.target_norm.shape[2]), weights_initialization_types_list[-1]))
+        self.biases.append(biases_initialization_func(self.target_norm.shape[2], self.activation_funcs_list[-1]))
 
         self.velocity_weights = [np.zeros_like(w) for w in self.weights]
+
+
+    def train(self, is_save):
+        start_time = perf_counter()
+
+        last_output =  None
+
+        for epoch in range(self.epochs):
+            activated_hidden_layers, activated_outputs = self.forward_propagation()
+            self.back_propagation(activated_hidden_layers, activated_outputs)
+
+            if epoch % 100 == 0:
+                print_training_logs_nn(nn_name='DenseMultiLayerNN', epoch=epoch + 1, epochs=self.epochs, training_loss=self.training_losses[-1], training_loss_function_name=self.training_loss_func_name)
+
+            if epoch + 1 == self.epochs:
+                last_output = activated_outputs
+
+        end_time = perf_counter()
+        training_time = end_time - start_time
+
+        print(f'Last output: {last_output}')
+        print(f'Training time: {training_time:.2f} secs')
+
+        if is_save: self.save()
+
+        plot_training_losses(problem_name=self.problem_name, training_loss_function_name=self.training_loss_func_name, training_losses=self.training_losses)
 
 
     def forward_propagation(self):
@@ -60,7 +92,7 @@ class CustomDenseMultiLayerNN:
         for i in range(self.batch_size):
             activated_hidden_layers_for_batch = []
 
-            prev_activated_layer = self.input_data[i]
+            prev_activated_layer = self.input_data_norm[i]
 
             for layer_idx in range(self.num_hidden_layers):
                 raw_layer = np.dot(prev_activated_layer, self.weights[layer_idx]) + self.biases[layer_idx]
@@ -85,8 +117,8 @@ class CustomDenseMultiLayerNN:
         batch_loss = 0
 
         for i in range(self.batch_size):
-            batch_loss += training_loss_func(y_true=self.target[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_function_name)
-            error = training_loss_derivative_func(y_true=self.target[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_function_name)
+            batch_loss += training_loss_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_func_name)
+            error = training_loss_derivative_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_func_name)
 
             delta = error * activation_derivative_func(activated_outputs[i], self.activation_funcs_list[-1])
 
@@ -103,7 +135,7 @@ class CustomDenseMultiLayerNN:
 
                 delta = error * activation_derivative_func(activated_hidden_layers[i][layer_idx], self.activation_funcs_list[layer_idx])
 
-                prev_layer = self.input_data[i] if layer_idx == 0 else activated_hidden_layers[i][layer_idx - 1]
+                prev_layer = self.input_data_norm[i] if layer_idx == 0 else activated_hidden_layers[i][layer_idx - 1]
 
                 d_weights[layer_idx] += np.dot(prev_layer.T, delta)
                 d_biases[layer_idx] += np.sum(delta, axis=0)
@@ -134,6 +166,9 @@ class CustomDenseMultiLayerNN:
             "weights": self.weights,
             "biases": self.biases,
 
+            "data_normalization_type": self.data_normalization_type,
+            "normalization_params": self.normalization_params,
+
             "hidden_neurons_list": self.hidden_neurons_list,
             "activation_funcs_list": self.activation_funcs_list,
             "weights_initialization_types_list": self.weights_initialization_types_list,
@@ -149,7 +184,7 @@ class CustomDenseMultiLayerNN:
             "reg_type": self.reg_type,
             "reg_lambda": self.reg_lambda,
 
-            "training_loss_function_name": self.training_loss_function_name,
+            "training_loss_func_name": self.training_loss_func_name,
             "training_losses": self.training_losses,
         }
 
@@ -158,95 +193,16 @@ class CustomDenseMultiLayerNN:
         save_nn_model(file_name, model_info)
 
 
-    def train(self):
-        start_time = perf_counter()
+def load_custom_dense_multilayer_nn(file_name):
+    model_info = load_saved_nn_model(file_name=file_name)
 
-        for epoch in range(self.epochs):
-            activated_hidden_layers, activated_outputs = self.forward_propagation()
-            self.back_propagation(activated_hidden_layers, activated_outputs)
+    dense_multilayer_nn = CustomDenseMultiLayerNN(
+        problem_name=model_info['problem_name'], input_data_norm=None, target_norm=None,
+        data_normalization_type=model_info['data_normalization_type'], normalization_params=model_info['normalization_params'],
+        hidden_neurons_list=model_info['hidden_neurons_list'], activation_funcs_list=model_info['activation_funcs_list'],
+        weights_initialization_types_list=model_info['weights_initialization_types_list'], training_loss_func_name=model_info['training_loss_func_name'],
+        epochs=model_info['epochs'], learning_rate=model_info['learning_rate'], momentum=model_info['momentum'], reg_type=model_info['reg_type'], reg_lambda=model_info['reg_lambda']
+    )
 
-        end_time = perf_counter()
-        training_time = end_time - start_time
+    return dense_multilayer_nn
 
-        print(f'Training time: {training_time:.2f} secs')
-
-        self.save()
-
-
-
-
-
-
-
-
-
-
-
-
-
-# def train_single_layer_nn(x, y, epochs, learning_rate, hidden_neurons, in_to_hid_init_name, hid_to_out_init_name, hid_act_func_name, out_act_func_name, plot):
-#     from utils.visualisation import plot_mse, plot_decision_boundary, print_result_nn
-#
-#     np.random.seed(42)
-#
-#     input_neurons = x.shape[1]
-#     output_neurons = y.shape[1]
-#
-#     input_to_hidden_weights = weights_initialization_func((input_neurons, hidden_neurons), in_to_hid_init_name)
-#     hidden_to_output_weights = weights_initialization_func((hidden_neurons, output_neurons), hid_to_out_init_name)
-#
-#     bias_hidden_weights = np.zeros((1, hidden_neurons))
-#     bias_output_weights = np.zeros((1, output_neurons))
-#
-#     final_nn_output = np.array([])
-#     mse_values = []
-#
-#     start_time = perf_counter()
-#
-#     for epoch in range(epochs):
-#         # Forward propagation
-#         hidden_pre_activation = np.dot(x, input_to_hidden_weights) + bias_hidden_weights # Potted sum for hidden layer
-#         hidden_activated = activation_func(hidden_pre_activation, hid_act_func_name) # Neurons activation for hidden layer
-#
-#         output_pre_activation = np.dot(hidden_activated, hidden_to_output_weights) + bias_output_weights
-#         output_activated = activation_func(output_pre_activation, out_act_func_name)
-#
-#         final_nn_output = output_activated
-#         mse_values.append(cost_func(y, output_activated, 'mse'))
-#
-#         # Back propagation
-#         output_error = y - output_activated
-#         # Output gradient - CORRECTIONS for each component
-#         # Output error * sensitivity for each component = how each component contributed to output error
-#         output_gradient = output_error * activation_derivative_func(output_activated, out_act_func_name)
-#
-#         # Replacing output_error to hidden layer
-#         hidden_error = np.dot(output_gradient, hidden_to_output_weights.T)
-#         hidden_gradient = hidden_error * activation_derivative_func(hidden_activated, hid_act_func_name)
-#
-#         # Updating weights and biases
-#         hidden_to_output_weights += np.dot(hidden_activated.T, output_gradient) * learning_rate
-#         input_to_hidden_weights += np.dot(x.T, hidden_gradient) * learning_rate
-#
-#         bias_output_weights += np.sum(output_gradient, axis=0, keepdims=True) * learning_rate
-#         bias_hidden_weights += np.sum(hidden_gradient, axis=0, keepdims=True) * learning_rate
-#
-#         if plot is not None:
-#             plot_decision_boundary(x, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hid_act_func_name, out_act_func_name, epoch, plot)
-#             plot.pause(0.01)
-#
-#     if plot is not None:
-#         plot.show()
-#
-#     end_time = perf_counter()
-#     training_time = end_time - start_time
-#
-#     print_result_nn(final_nn_output, epochs, training_time)
-#     plot_mse(mse_values)
-#
-#     return input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights
-#
-#
-# def predict_single_layer_nn(x, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hid_act_func_name, out_act_func_name):
-#     hidden_activated = activation_func(np.dot(x, input_to_hidden_weights) + bias_hidden_weights, hid_act_func_name)
-#     return activation_func(np.dot(hidden_activated, hidden_to_output_weights) + bias_output_weights, out_act_func_name)
