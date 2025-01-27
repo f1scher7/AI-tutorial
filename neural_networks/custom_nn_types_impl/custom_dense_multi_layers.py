@@ -4,22 +4,24 @@ from utils.math.activation_funcs import activation_func, activation_derivative_f
 from utils.math.weights_initialization import weights_initialization_func
 from utils.math.biases_initialization import biases_initialization_func
 from utils.math.loss import training_loss_func, training_loss_derivative_func
-from utils.visualisation import print_training_logs_nn, plot_training_losses
+from utils.visualization import print_training_logs_nn, plot_training_losses
 from utils.utils import save_nn_model, load_saved_nn_model
 
 
 class CustomDenseMultiLayerNN:
 
-    def __init__(self, problem_name, input_data_norm, target_norm, data_normalization_type, normalization_params,
+    def __init__(self, problem_name, input_data_norm, target_norm,
+                 data_norm_func_name, input_data_norm_params, target_norm_params,
                  hidden_neurons_list, activation_funcs_list, weights_initialization_types_list,
-                 training_loss_func_name, epochs, learning_rate, momentum=0.9, reg_type=None, reg_lambda=0.1):
+                 training_loss_func_name, epochs, learning_rate, momentum=0.9, reg_type=None, reg_lambda=0.1, is_train=True):
 
         self.problem_name = problem_name
         self.input_data_norm = input_data_norm
         self.target_norm = target_norm
 
-        self.data_normalization_type = data_normalization_type
-        self.normalization_params = normalization_params
+        self.data_norm_func_name = data_norm_func_name
+        self.input_data_norm_params = input_data_norm_params
+        self.target_norm_params = target_norm_params
 
         self.hidden_neurons_list = hidden_neurons_list
         self.activation_funcs_list = activation_funcs_list
@@ -43,20 +45,34 @@ class CustomDenseMultiLayerNN:
         self.biases = []
         self.training_losses = []
 
-        # adding weights for input -> hidden1 layer
-        self.weights.append(weights_initialization_func((self.features_size, hidden_neurons_list[0]), self.weights_initialization_types_list[0]))
-        self.biases.append(biases_initialization_func(self.hidden_neurons_list[0], self.activation_funcs_list[0]))
+        if is_train:
+            # adding weights for input -> hidden1 layer
+            self.weights.append(weights_initialization_func((self.features_size, hidden_neurons_list[0]), self.weights_initialization_types_list[0]))
+            self.biases.append(biases_initialization_func(self.hidden_neurons_list[0], self.activation_funcs_list[0]))
 
-        if self.num_hidden_layers > 1:
-            for layer_idx in range(1, self.num_hidden_layers):
-                self.weights.append(weights_initialization_func((self.hidden_neurons_list[layer_idx - 1], self.hidden_neurons_list[layer_idx]), weights_initialization_types_list[layer_idx]))
-                self.biases.append(np.zeros(self.hidden_neurons_list[layer_idx]))
+            if self.num_hidden_layers > 1:
+                for layer_idx in range(1, self.num_hidden_layers):
+                    self.weights.append(weights_initialization_func((self.hidden_neurons_list[layer_idx - 1], self.hidden_neurons_list[layer_idx]), weights_initialization_types_list[layer_idx]))
+                    self.biases.append(np.zeros(self.hidden_neurons_list[layer_idx]))
 
-        # adding weights and biases for hidden_last -> output layer
-        self.weights.append(weights_initialization_func((hidden_neurons_list[-1], self.target_norm.shape[2]), weights_initialization_types_list[-1]))
-        self.biases.append(biases_initialization_func(self.target_norm.shape[2], self.activation_funcs_list[-1]))
+            # adding weights and biases for hidden_last -> output layer
+            self.weights.append(weights_initialization_func((hidden_neurons_list[-1], self.target_norm.shape[2]), weights_initialization_types_list[-1]))
+            self.biases.append(biases_initialization_func(self.target_norm.shape[2], self.activation_funcs_list[-1]))
 
-        self.velocity_weights = [np.zeros_like(w) for w in self.weights]
+            self.velocity_weights = [np.zeros_like(w) for w in self.weights]
+
+
+    def inference(self, input_data):
+        self.input_data_norm = input_data
+
+        self.batch_size = 1
+        self.sequence_len = self.input_data_norm.shape[0]
+        self.features_size = self.input_data_norm.shape[1]
+
+        _, activated_outputs = self.forward_propagation()
+
+        return activated_outputs
+
 
 
     def train(self, is_save):
@@ -148,7 +164,7 @@ class CustomDenseMultiLayerNN:
         d_weights = [dw / self.batch_size for dw in d_weights]
         d_biases = [db / self.batch_size for db in d_biases]
 
-        for layer_idx in range(self.num_hidden_layers):
+        for layer_idx in range(self.num_hidden_layers + 1):
             self.velocity_weights[layer_idx] = (
                 self.momentum * self.velocity_weights[layer_idx] - self.learning_rate * d_weights[layer_idx]
             )
@@ -163,11 +179,14 @@ class CustomDenseMultiLayerNN:
 
     def save(self):
         model_info = {
+            "problem_name": self.problem_name,
+
             "weights": self.weights,
             "biases": self.biases,
 
-            "data_normalization_type": self.data_normalization_type,
-            "normalization_params": self.normalization_params,
+            "data_norm_func_name": self.data_norm_func_name,
+            "input_data_norm_params": self.input_data_norm_params,
+            "target_norm_params": self.target_norm_params,
 
             "hidden_neurons_list": self.hidden_neurons_list,
             "activation_funcs_list": self.activation_funcs_list,
@@ -188,7 +207,7 @@ class CustomDenseMultiLayerNN:
             "training_losses": self.training_losses,
         }
 
-        file_name = f'CustomDenseMultiLayerNN_{self.problem_name}'
+        file_name = f'{self.problem_name}_CustomDenseMultiLayerNN'
 
         save_nn_model(file_name, model_info)
 
@@ -198,11 +217,14 @@ def load_custom_dense_multilayer_nn(file_name):
 
     dense_multilayer_nn = CustomDenseMultiLayerNN(
         problem_name=model_info['problem_name'], input_data_norm=None, target_norm=None,
-        data_normalization_type=model_info['data_normalization_type'], normalization_params=model_info['normalization_params'],
+        data_norm_func_name=model_info['data_norm_func_name'], input_data_norm_params=model_info['input_data_norm_params'], target_norm_params=model_info['target_norm_params'],
         hidden_neurons_list=model_info['hidden_neurons_list'], activation_funcs_list=model_info['activation_funcs_list'],
         weights_initialization_types_list=model_info['weights_initialization_types_list'], training_loss_func_name=model_info['training_loss_func_name'],
-        epochs=model_info['epochs'], learning_rate=model_info['learning_rate'], momentum=model_info['momentum'], reg_type=model_info['reg_type'], reg_lambda=model_info['reg_lambda']
+        epochs=model_info['epochs'], learning_rate=model_info['learning_rate'], momentum=model_info['momentum'], reg_type=model_info['reg_type'], reg_lambda=model_info['reg_lambda'], is_train=False
     )
+
+    dense_multilayer_nn.weights = model_info['weights']
+    dense_multilayer_nn.biases = model_info['biases']
 
     return dense_multilayer_nn
 
