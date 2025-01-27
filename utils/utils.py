@@ -13,6 +13,6 @@ def save_nn_model(file_name, model_info):
 
 
 def load_saved_nn_model(file_name):
-    nn_model_info = np.load(f'{SAVED_MODELS_PATH}{file_name}', allow_pickle=True).item()
+    nn_model_info = np.load(f'{file_name}', allow_pickle=True).item()
 
     return nn_model_info
