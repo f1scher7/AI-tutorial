@@ -1,59 +1,71 @@
 import numpy as np
-
-from utils.math.input_data_normalization import min_max_normalization
-from neural_networks.nn_types_impl import perceptron
-from neural_networks.nn_types_impl import single_layer
-from utils.visualisation import create_window_plot
+from neural_networks.custom_nn_types_impl.custom_dense_multi_layers import CustomDenseMultiLayerNN, load_custom_dense_multilayer_nn
+from utils.math.data_normalization import min_max_normalization_for_each_feature, min_max_normalization_for_each_feature_with_params, min_max_denormalization_for_each_feature
+from env_loader import STUDENT_PASS_FAIL_SAVED_MODEL
 
 
-normalization_range = (0, 1)
-
-# First student: 3 hours of sleeping and 5 hours of studying
-X, min_val_norm, max_val_norm = min_max_normalization(
-    np.array([[3, 8], [4, 7], [8, 6], [7, 7], [6, 5], [2, 6], [1, 10],
-            [6, 4], [8, 0], [7, 2], [5, 1], [4, 5], [3, 5], [0, 5], [0, 10]]), normalization_range)
+# First student: 3 hours of sleeping and 8 hours of studying
+input_data = np.array([[3, 8], [4, 7], [8, 6], [7, 7], [6, 5], [2, 6], [1, 10],
+                       [6, 4], [8, 0], [7, 2], [5, 1], [4, 5], [3, 5], [0, 5], [0, 10]])
 # 0 - fail; 1 - pass
-y = np.array([[1], [1], [1], [1], [1], [1], [0],
-              [1], [0], [0], [0], [1], [1], [0], [0]])
+target = np.array([[1], [1], [1], [1], [1], [1], [0],
+                   [1], [0], [0], [0], [1], [1], [0], [0]])
+
+input_data_reshaped = input_data.reshape(1, input_data.shape[0], input_data.shape[1])
+target_reshaped = target.reshape(1, target.shape[0], target.shape[1])
+
+input_data_norm, input_data_norm_params = min_max_normalization_for_each_feature(input_data_reshaped)
 
 
-plot = create_window_plot('student_pass_fail training data', 10, 6)
+problem_name = 'STUDENT-PASS-FAIL-problem'
 
-pass_points = plot.scatter(X[y.ravel() == 1, 0], X[y.ravel() == 1, 1], c="blue", s=50, label="Pass (1)", zorder=5)
-fail_points = plot.scatter(X[y.ravel() == 0, 0], X[y.ravel() == 0, 1], c="red", s=50, label="Fail (0)", zorder=5)
+data_norm_func_name = 'min_max'
+target_norm_params = None
 
-plot.xlabel('Hours of sleeping')
-plot.ylabel('Hours of studying')
-plot.title('Training data plot for student_pass_fail problem')
-plot.legend(loc="upper right")
-plot.grid(True, zorder=0)
+hidden_neurons_list = [32]
+activation_funcs_list = ['sigmoid', 'sigmoid']
+weights_initialization_types_list = ['xavier', 'xavier']
 
+training_loss_func_name = 'mse'
 
-epochs = 5000
+epochs = 3000
 learning_rate = 0.1
-hidden_neurons = 8  # for single layer nn
-input_to_hidden_weights_init_name = 'xavier'
-hidden_to_output_weights_init_name = 'xavier'
-hidden_activation_func_name = 'sigmoid'
-output_activation_func_name = 'sigmoid'
+momentum = 0.9
 
-# input_output_weights, bias_output_weights = perceptron_nn_core.train_perceptron_nn(X, y, epochs, learning_rate)
-input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights = single_layer.train_single_layer_nn(X, y, epochs, learning_rate, hidden_neurons, input_to_hidden_weights_init_name, hidden_to_output_weights_init_name, hidden_activation_func_name, output_activation_func_name, plot)
+reg_type = None
+reg_lambda = 0.1
+
+
+# INFERENCE
+custom_dense_multilayer_nn = load_custom_dense_multilayer_nn(STUDENT_PASS_FAIL_SAVED_MODEL)
 
 while True:
     sleep_hours = int(input('Sleep hours: '))
     study_hours = int(input('Study hours: '))
 
-    user_input, _, _ = min_max_normalization(np.array([[sleep_hours, study_hours]]), normalization_range, min_val_norm, max_val_norm)
+    user_input = np.array([[sleep_hours, study_hours]]).reshape(1, 1, 2)
+    norm_data = min_max_normalization_for_each_feature_with_params(user_input, custom_dense_multilayer_nn.input_data_norm_params)
 
-    # nn_output = perceptron_nn_core.predict_perceptron_nn(user_input, input_output_weights, bias_output_weights)
-    nn_output = single_layer.predict_single_layer_nn(user_input, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hidden_activation_func_name, output_activation_func_name)
+    activated_output = custom_dense_multilayer_nn.inference(norm_data)
+    output_value = round(activated_output[0][0].item())
 
-    print(f'Predicted probability of passing for the student with {sleep_hours} hours of sleeping and {study_hours} hours of studying is: {nn_output[0][0]:.4f}')
+    print(f'Predicted probability of passing for the student with {sleep_hours} hours of sleeping and {study_hours} hours of studying is: {activated_output[0][0].item():.2f}')
 
-    if nn_output[0][0] >= 0.50:
+    if output_value >= 0.50:
         print('Student Pass!')
     else:
         print('Student Fail!')
 
     print('=====================================================================')
+
+
+# TRAIN
+# custom_dense_multilayer_nn = CustomDenseMultiLayerNN(
+#     problem_name=problem_name, input_data_norm=input_data_norm, target_norm=target_reshaped,
+#     data_norm_func_name=data_norm_func_name, input_data_norm_params=input_data_norm_params, target_norm_params=target_norm_params,
+#     hidden_neurons_list=hidden_neurons_list, activation_funcs_list=activation_funcs_list, weights_initialization_types_list=weights_initialization_types_list,
+#     training_loss_func_name=training_loss_func_name, epochs=epochs, learning_rate=learning_rate, momentum=momentum, reg_type=reg_type, reg_lambda=reg_lambda
+# )
+#
+# custom_dense_multilayer_nn.train(is_save=True)
+

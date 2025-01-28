@@ -1,44 +1,57 @@
 import numpy as np
-
-from neural_networks.nn_types_impl import single_layer
-from utils.visualisation import create_window_plot
-
-
-X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-y = np.array([[0], [1], [1], [0]])
+from neural_networks.custom_nn_types_impl.custom_dense_multi_layers import CustomDenseMultiLayerNN, load_custom_dense_multilayer_nn
+from env_loader import XOR_SAVED_MODEL
 
 
-plot = create_window_plot('XOR training data', 10, 6)
+input_data = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+target = np.array([[0], [1], [1], [0]])
 
-pass_points = plot.scatter(X[y.ravel() == 1, 0], X[y.ravel() == 1, 1], c="blue", s=50, label="XOR = 1", zorder=5)
-fail_points = plot.scatter(X[y.ravel() == 0, 0], X[y.ravel() == 0, 1], c="red", s=50, label="XOR = 0", zorder=5)
-
-plot.xlabel('A')
-plot.ylabel('B')
-plot.title('Training data plot for XOR problem')
-plot.legend(loc="upper right")
-plot.grid(True, zorder=0)
+input_data_reshaped = input_data.reshape(1, input_data.shape[0], input_data.shape[1])
+target_reshaped = target.reshape(1, target.shape[0], target.shape[1])
 
 
-epochs = 5000
+problem_name = 'XOR-problem'
+
+data_norm_func_name = None
+input_data_norm_params = None
+target_norm_params = None
+
+hidden_neurons_list = [4]
+activation_funcs_list = ['sigmoid', 'sigmoid']
+weights_initialization_types_list = ['xavier', 'xavier']
+
+training_loss_func_name = 'mse'
+
+epochs = 3000
 learning_rate = 0.1
-hidden_neurons = 32 # for single layer nn
-input_to_hidden_weights_init_name = 'he'
-hidden_to_output_weights_init_name = 'he'
-hidden_activation_func_name = 'relu'
-output_activation_func_name = 'relu'
+momentum = 0.9
 
-input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights = single_layer.train_single_layer_nn(X, y, epochs, learning_rate, hidden_neurons, input_to_hidden_weights_init_name, hidden_to_output_weights_init_name, hidden_activation_func_name, output_activation_func_name, None)
+reg_type = None
+reg_lambda = 0.1
 
-print('XOR problem')
+
+# INFERENCE
+custom_dense_multilayer_nn = load_custom_dense_multilayer_nn(XOR_SAVED_MODEL)
 
 while True:
     a = int(input('A: '))
     b = int(input('B: '))
 
-    user_input = np.array([[a, b]])
+    user_input = np.array([[a, b]]).reshape(1, 1, 2)
 
-    nn_output = single_layer.predict_single_layer_nn(user_input, input_to_hidden_weights, hidden_to_output_weights, bias_hidden_weights, bias_output_weights, hidden_activation_func_name, output_activation_func_name)
+    activated_output = custom_dense_multilayer_nn.inference(input_data=user_input)
+    output_value = round(activated_output[0][0].item())
 
-    print(f'XOR({a}, {b}) = {nn_output[0][0]:.4f}')
+    print(f'XOR({a}, {b}) = {output_value}')
     print("=====================================================================")
+
+
+# TRAIN
+# custom_dense_multilayer_nn = CustomDenseMultiLayerNN(
+#     problem_name=problem_name, input_data_norm=input_data_reshaped, target_norm=target_reshaped,
+#     data_norm_func_name=data_norm_func_name, input_data_norm_params=input_data_norm_params, target_norm_params=target_norm_params,
+#     hidden_neurons_list=hidden_neurons_list, activation_funcs_list=activation_funcs_list, weights_initialization_types_list=weights_initialization_types_list,
+#     training_loss_func_name=training_loss_func_name, epochs=epochs, learning_rate=learning_rate, momentum=momentum, reg_type=reg_type, reg_lambda=reg_lambda
+# )
+#
+# custom_dense_multilayer_nn.train(is_save=True)
