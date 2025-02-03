@@ -1,11 +1,12 @@
 import numpy as np
 from utils.math.weights_initialization import cnn_weights_initialization_func
 from utils.math.biases_initialization import biases_initialization_func
+from utils.math.activation_funcs import activation_func
 
 
 class ConvolutionLayer:
 
-    def __init__(self, input_shape, filters_num, filter_size, stride=1, padding=0):
+    def __init__(self, input_shape, filters_num, filter_size, stride=1, padding=0, feature_map_activation_func='relu'):
         """
         input_shape: (width, height, channels)
         filter_size: (filter_width, filter_height)
@@ -15,6 +16,7 @@ class ConvolutionLayer:
         self.filter_size = filter_size
         self.stride = stride
         self.padding = padding
+        self.feature_map_activation_func = feature_map_activation_func
 
         self.input_width = self.input_shape[0]
         self.input_height = self.input_shape[1]
@@ -40,15 +42,19 @@ class ConvolutionLayer:
         if self.padding > 0:
             input_data = np.pad(input_data, ((0, 0), (self.padding, self.padding), (self.padding, self.padding), (0, 0)), mode='constant', constant_values=0)
 
-        features_maps = np.zeros((batch_size, self.filters_num, self.feature_map_height, self.feature_map_width))
+        feature_maps = np.zeros((batch_size, self.filters_num, self.feature_map_height, self.feature_map_width))
+        activated_feature_maps = np.zeros_like(feature_maps)
 
-        for batch in range(batch_size):
-            img = input_data[batch]
+        for batch_idx in range(batch_size):
+            img = input_data[batch_idx]
 
             for flt_idx in range(self.filters_num):
-                features_maps[batch, flt_idx] = self.apply_convolution(img, self.filters[flt_idx], self.feature_map_height, self.feature_map_width)
+                feature_maps[batch_idx, flt_idx] = self.apply_convolution(img, self.filters[flt_idx], self.feature_map_height, self.feature_map_width)
+                feature_maps[batch_idx, flt_idx] += self.biases[flt_idx]
 
-        return features_maps
+                activated_feature_maps[batch_idx, flt_idx] = activation_func(feature_maps[batch_idx, flt_idx], self.feature_map_activation_func)
+
+        return activated_feature_maps
 
 
     def apply_convolution(self, img, flt, feature_map_height, feature_map_width):
@@ -60,6 +66,6 @@ class ConvolutionLayer:
                 start_j = j * self.stride
 
                 img_slice = img[start_i:start_i + flt.shape[0], start_j:start_j + flt.shape[1]]
-                feature_map[i, j] = np.sum(img_slice * flt)
+                feature_map[i, j] = np.sum(np.multiply(img_slice, flt))
 
         return feature_map
