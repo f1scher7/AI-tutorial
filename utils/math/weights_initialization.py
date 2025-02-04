@@ -23,10 +23,10 @@ def cnn_weights_initialization_func(shape, func_name):
         return weights_initialization_func(shape=shape, func_name=func_name)
     else:
         filter_area = shape[1] * shape[2]
-        fan_in = shape[3] * filter_area
+        fan_in = shape[3] * filter_area # fan is a num of input's neurons (filter_height * filter_width * filter_channels)
 
         if func_name == 'he':
             return np.random.normal(loc=0, scale=np.sqrt(2. / fan_in), size=shape)
         elif func_name == 'xavier':
-            fan_out = shape[0] * filter_area
+            fan_out = shape[0] * filter_area # fan is a num of output's neurons (filter_height * filter_width * filter_nums)
             return np.random.uniform(low=-np.sqrt(2. / (fan_in + fan_out)), high=np.sqrt(2. / (fan_in + fan_out)), size=shape)
