@@ -74,7 +74,6 @@ class CustomDenseMultiLayerNN:
         return activated_outputs
 
 
-
     def train(self, is_save):
         start_time = perf_counter()
 
