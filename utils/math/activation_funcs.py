@@ -2,7 +2,11 @@ import numpy as np
 
 
 def activation_func(x, func_name):
-    return activation_funcs[func_name](x)
+    if func_name == 'softmax':
+        exp_x = np.exp((x - np.max(x, axis=-1, keepdims=True))) # we do it to avoid the e ** 1000, e ** 70000
+        return exp_x / np.sum(exp_x, axis=-1, keepdims=True) # axis=-1 = the last dim
+    else:
+        return activation_funcs[func_name](x)
 
 def activation_derivative_func(x, func_name):
     return activation_derivative_funcs[func_name](x)
