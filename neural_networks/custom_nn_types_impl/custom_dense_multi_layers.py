@@ -135,7 +135,10 @@ class CustomDenseMultiLayerNN:
             batch_loss += training_loss_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_func_name)
             error = training_loss_derivative_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_func_name)
 
-            delta = error * activation_derivative_func(activated_outputs[i], self.activation_funcs_list[-1])
+            if self.activation_funcs_list[-1] == 'softmax' and self.training_loss_func_name == 'categorical_cross_entropy':
+                delta = activated_outputs[i] - self.target_norm[i]
+            else:
+                delta = error * activation_derivative_func(activated_outputs[i], self.activation_funcs_list[-1])
 
             d_weights[-1] += np.dot(activated_hidden_layers[i][-1].T, delta)
             d_biases[-1] += np.sum(delta, axis=0)
