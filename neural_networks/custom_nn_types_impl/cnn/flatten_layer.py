@@ -17,3 +17,9 @@ class FlattenLayer:
 
     def back_propagation(self, output_data):
         return output_data.reshape(self.input_shape)
+
+
+    def data_to_save(self):
+        return {
+            "input_shape": self.input_shape
+        }
