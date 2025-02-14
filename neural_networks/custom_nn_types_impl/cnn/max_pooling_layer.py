@@ -70,3 +70,12 @@ class MaxPoolingLayer:
                 pooling_result[i, j] = max_value
 
         return pooling_result, mask
+
+
+    def data_to_save(self):
+        return {
+            "pool_height": self.pool_height,
+            "pool_width": self.pool_width,
+            "stride": self.stride,
+            "masks": self.masks,
+        }
