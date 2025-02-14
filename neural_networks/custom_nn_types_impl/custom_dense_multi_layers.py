@@ -39,27 +39,20 @@ class CustomDenseMultiLayerNN:
         self.sequence_len = input_data_norm.shape[1] if input_data_norm is not None else None
         self.features_size = input_data_norm.shape[2] if input_data_norm is not None else None
 
-        self.num_hidden_layers = len(hidden_neurons_list)
+        self.num_hidden_layers = len(self.hidden_neurons_list)
 
         self.weights = []
         self.biases = []
         self.training_losses = []
+        self.velocity_weights = []
+
+        self.is_weights_and_biases_init = False
 
         if is_train:
             # adding weights for input -> hidden1 layer
-            self.weights.append(weights_initialization_func((self.features_size, hidden_neurons_list[0]), self.weights_init_types_list[0]))
-            self.biases.append(biases_initialization_func(self.hidden_neurons_list[0], self.activ_funcs_list[0]))
-
-            if self.num_hidden_layers > 1:
-                for layer_idx in range(1, self.num_hidden_layers):
-                    self.weights.append(weights_initialization_func((self.hidden_neurons_list[layer_idx - 1], self.hidden_neurons_list[layer_idx]), weights_init_types_list[layer_idx]))
-                    self.biases.append(np.zeros(self.hidden_neurons_list[layer_idx]))
-
-            # adding weights and biases for hidden_last -> output layer
-            self.weights.append(weights_initialization_func((hidden_neurons_list[-1], self.target_norm.shape[2]), weights_init_types_list[-1]))
-            self.biases.append(biases_initialization_func(self.target_norm.shape[2], self.activ_funcs_list[-1]))
-
-            self.velocity_weights = [np.zeros_like(w) for w in self.weights]
+            if self.features_size is not None:
+                self.init_weights_and_biases()
+                self.is_weights_and_biases_init = True
 
 
     def inference(self, input_data):
@@ -101,6 +94,10 @@ class CustomDenseMultiLayerNN:
 
 
     def forward_propagation(self):
+        if not self.is_weights_and_biases_init and self.features_size is not None:
+            self.init_weights_and_biases()
+            self.is_weights_and_biases_init = True
+
         activated_hidden_layers = []
         activated_outputs = []
 
@@ -134,13 +131,17 @@ class CustomDenseMultiLayerNN:
         batch_loss = 0
 
         for i in range(self.batch_size):
-            batch_loss += training_loss_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_func_name)
-            error = training_loss_derivative_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], training_loss_func_name=self.training_loss_func_name)
+            batch_loss += training_loss_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], batch_size=self.batch_size, training_loss_func_name=self.training_loss_func_name)
+            error = training_loss_derivative_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], batch_size=self.batch_size, training_loss_func_name=self.training_loss_func_name)
 
             if self.activ_funcs_list[-1] == 'softmax' and self.training_loss_func_name == 'categorical_cross_entropy':
                 delta = activated_outputs[i] - self.target_norm[i]
             else:
                 delta = error * activation_derivative_func(activated_outputs[i], self.activ_funcs_list[-1])
+
+            if activated_hidden_layers[i][-1].ndim == 1 and delta.ndim == 1:
+                activated_hidden_layers[i][-1] = activated_hidden_layers[i][-1].reshape(1, -1)
+                delta = delta.reshape(1, -1)
 
             d_weights[-1] += np.dot(activated_hidden_layers[i][-1].T, delta)
             d_biases[-1] += np.sum(delta, axis=0)
@@ -156,6 +157,9 @@ class CustomDenseMultiLayerNN:
                 delta = error * activation_derivative_func(activated_hidden_layers[i][layer_idx], self.activ_funcs_list[layer_idx])
 
                 prev_layer = self.input_data_norm[i] if layer_idx == 0 else activated_hidden_layers[i][layer_idx - 1]
+
+                if prev_layer.ndim == 1:
+                    prev_layer = prev_layer.reshape(1, -1)
 
                 d_weights[layer_idx] += np.dot(prev_layer.T, delta)
                 d_biases[layer_idx] += np.sum(delta, axis=0)
@@ -183,8 +187,33 @@ class CustomDenseMultiLayerNN:
         return self.weights, self.biases, np.array(all_deltas).reshape(self.batch_size, -1)
 
 
+    def init_weights_and_biases(self):
+        self.weights.append(weights_initialization_func((self.features_size, self.hidden_neurons_list[0]), self.weights_init_types_list[0]))
+        self.biases.append(biases_initialization_func(self.hidden_neurons_list[0], self.activ_funcs_list[0]))
+
+        if self.num_hidden_layers > 1:
+            for layer_idx in range(1, self.num_hidden_layers):
+                self.weights.append(weights_initialization_func(
+                    (self.hidden_neurons_list[layer_idx - 1], self.hidden_neurons_list[layer_idx]), self.weights_init_types_list[layer_idx]))
+                self.biases.append(np.zeros(self.hidden_neurons_list[layer_idx]))
+
+        # adding weights and biases for hidden_last -> output layer
+        self.weights.append(weights_initialization_func((self.hidden_neurons_list[-1], self.target_norm.shape[-1]), self.weights_init_types_list[-1]))
+        self.biases.append(biases_initialization_func(self.target_norm.shape[-1], self.activ_funcs_list[-1]))
+
+        self.velocity_weights = [np.zeros_like(w) for w in self.weights]
+
+
     def save(self):
-        model_info = {
+        model_info = self.data_to_save
+
+        file_name = f'{self.problem_name}_CustomDenseMultiLayerNN'
+
+        save_nn_model(file_name, model_info)
+
+
+    def data_to_save(self):
+        return {
             "problem_name": self.problem_name,
 
             "weights": self.weights,
@@ -212,10 +241,6 @@ class CustomDenseMultiLayerNN:
             "training_loss_func_name": self.training_loss_func_name,
             "training_losses": self.training_losses,
         }
-
-        file_name = f'{self.problem_name}_CustomDenseMultiLayerNN'
-
-        save_nn_model(file_name, model_info)
 
 
 def load_custom_dense_multilayer_nn(file_name):
