@@ -26,7 +26,7 @@ class ConvolutionLayer:
         self.batch_size = self.input_data.shape[0]
         self.input_height = self.input_data.shape[1]
         self.input_width = self.input_data.shape[2]
-        self.channels = input_data.shape[3]
+        self.channels = self.input_data.shape[3]
 
         self.filter_width = self.filter_size[0]
         self.filter_height = self.filter_size[1]
@@ -104,3 +104,31 @@ class ConvolutionLayer:
                 feature_map[i, j] = np.sum(np.multiply(img_slice, flt), axis=(0, 1, 2))
 
         return feature_map
+
+
+    def data_to_save(self):
+        return {
+            "filters": self.filters,
+            "biases": self.biases,
+
+            "filter_init_func_name": self.filter_init_func_name,
+            "filters_num": self.filters_num,
+            "filter_size": self.filter_size,
+            "filter_height": self.filter_height,
+            "filter_width": self.filter_width,
+
+            "pre_activated_feature_maps": self.pre_activated_feature_maps,
+            "feature_map_activ_func": self.feature_map_activ_func,
+            "feature_map_width": self.feature_map_width,
+            "feature_map_height": self.feature_map_height,
+
+            "padding": self.padding,
+            "stride": self.stride,
+
+            "batch_size": self.batch_size,
+            "input_height": self.input_height,
+            "input_width": self.input_width,
+            "channels": self.channels,
+
+            "learning_rate": self.learning_rate,
+        }
