@@ -64,7 +64,7 @@ class ConvolutionLayer:
     def back_propagation(self, d_feature_maps):
         d_biases = np.sum(d_feature_maps, axis=(0, 2, 3))
         d_filters = np.zeros_like(self.filters)
-        d_input_data = np.zeros_like(self.input_data) # self.input_data is the self.original_input_data with padding
+        d_input_data = np.zeros_like(self.input_data, dtype=np.float64) # self.input_data is the self.original_input_data with padding
 
         for batch_idx in range(self.batch_size):
             d_feature_maps[batch_idx] *= activation_derivative_func(self.pre_activated_feature_maps[batch_idx], self.feature_map_activ_func)
