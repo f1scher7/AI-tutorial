@@ -126,9 +126,11 @@ class CustomDenseMultiLayerNN:
         d_weights = [np.zeros_like(w) for w in self.weights]
         d_biases = [np.zeros_like(b) for b in self.biases]
 
-        all_deltas = []
+        all_input_deltas = []
 
         batch_loss = 0
+
+        is_prev_layer_input = False
 
         for i in range(self.batch_size):
             batch_loss += training_loss_func(y_true=self.target_norm[i], y_pred=activated_outputs[i], batch_size=self.batch_size, training_loss_func_name=self.training_loss_func_name)
@@ -156,7 +158,11 @@ class CustomDenseMultiLayerNN:
 
                 delta = error * activation_derivative_func(activated_hidden_layers[i][layer_idx], self.activ_funcs_list[layer_idx])
 
-                prev_layer = self.input_data_norm[i] if layer_idx == 0 else activated_hidden_layers[i][layer_idx - 1]
+                if layer_idx == 0:
+                    prev_layer = self.input_data_norm[i]
+                    is_prev_layer_input = True
+                else:
+                    prev_layer = activated_hidden_layers[i][layer_idx - 1]
 
                 if prev_layer.ndim == 1:
                     prev_layer = prev_layer.reshape(1, -1)
@@ -166,7 +172,10 @@ class CustomDenseMultiLayerNN:
 
                 prev_delta = delta
 
-            all_deltas.append(prev_delta.copy())
+                if is_prev_layer_input:
+                    all_input_deltas.append(np.dot(delta, self.weights[0].T))
+
+            is_prev_layer_input = False
 
         self.training_losses.append(batch_loss / self.batch_size)
 
@@ -184,7 +193,7 @@ class CustomDenseMultiLayerNN:
 
             self.biases[layer_idx] -= self.learning_rate * d_biases[layer_idx]
 
-        return self.weights, self.biases, np.array(all_deltas).reshape(self.batch_size, -1)
+        return self.weights, self.biases, np.array(all_input_deltas).reshape(self.batch_size, -1)
 
 
     def init_weights_and_biases(self):
