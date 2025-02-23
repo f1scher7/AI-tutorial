@@ -66,7 +66,12 @@ class MaxPoolingLayer:
 
                 max_value = np.max(feature_map_slice)
 
-                mask[start_i:start_i + self.pool_height, start_j:start_j + self.pool_width] = (feature_map_slice == max_value)
+                max_value_positions = np.argwhere(feature_map_slice == max_value) # we find the positions of the max value in feature_map_slice
+
+                rand_chosen_max_value_pos = max_value_positions[np.random.choice(len(max_value_positions))]
+
+                mask[start_i + rand_chosen_max_value_pos[0], start_j + rand_chosen_max_value_pos[1]] = 1
+
                 pooling_result[i, j] = max_value
 
         return pooling_result, mask
