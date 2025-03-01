@@ -37,7 +37,7 @@ class MaxPoolingLayer:
         d_outputs: are gradients from the dense nn which were reshaped to pooling_results_size in the back propagation of flatten layer
         """
         batch_size, feature_maps_num, pooling_result_height, pooling_result_width = d_outputs.shape
-        d_feature_maps = np.zeros_like(self.masks, dtype=np.float64)
+        d_feature_maps = np.zeros_like(self.masks, dtype=np.float32)
 
         for batch_idx in range(batch_size):
             for map_idx in range(feature_maps_num):
@@ -46,7 +46,7 @@ class MaxPoolingLayer:
                         start_i = i * self.stride
                         start_j = j * self.stride
 
-                        current_mask = self.masks[batch_idx, map_idx, start_i:start_i + self.pool_height, start_j:start_j + self.pool_width].astype(np.float64)
+                        current_mask = self.masks[batch_idx, map_idx, start_i:start_i + self.pool_height, start_j:start_j + self.pool_width].astype(np.float32)
 
                         d_feature_maps[batch_idx, map_idx, start_i:start_i + self.pool_height, start_j:start_j + self.pool_width] += current_mask * d_outputs[batch_idx, map_idx, i, j]
 
