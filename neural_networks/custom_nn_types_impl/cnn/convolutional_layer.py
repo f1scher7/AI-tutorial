@@ -64,7 +64,7 @@ class ConvolutionLayer:
     def back_propagation(self, d_feature_maps):
         d_biases = np.sum(d_feature_maps, axis=(0, 2, 3))
         d_filters = np.zeros_like(self.filters)
-        d_input_data = np.zeros_like(self.input_data, dtype=np.float64) # self.input_data is the self.original_input_data with padding
+        d_input_data = np.zeros_like(self.input_data, dtype=np.float32) # self.input_data is the self.original_input_data with padding
 
         for batch_idx in range(self.batch_size):
             d_feature_maps[batch_idx] *= activation_derivative_func(self.pre_activated_feature_maps[batch_idx], self.feature_map_activ_func)
@@ -93,15 +93,25 @@ class ConvolutionLayer:
 
 
     def apply_convolution(self, img, flt, feature_map_height, feature_map_width):
-        feature_map = np.zeros((feature_map_height, feature_map_width))
+        # feature_map = np.zeros((feature_map_height, feature_map_width))
+        #
+        # for i in range(feature_map_height):
+        #     for j in range(feature_map_width):
+        #         start_i = i * self.stride
+        #         start_j = j * self.stride
+        #
+        #         img_slice = img[start_i:start_i + flt.shape[0], start_j:start_j + flt.shape[1]]
+        #         feature_map[i, j] = np.sum(np.multiply(img_slice, flt), axis=(0, 1, 2))
 
-        for i in range(feature_map_height):
-            for j in range(feature_map_width):
-                start_i = i * self.stride
-                start_j = j * self.stride
+        # getting all img slices for the filter
+        patches = np.lib.stride_tricks.sliding_window_view(
+            img, (self.filter_height, self.filter_width, self.channels)
+        )
 
-                img_slice = img[start_i:start_i + flt.shape[0], start_j:start_j + flt.shape[1]]
-                feature_map[i, j] = np.sum(np.multiply(img_slice, flt), axis=(0, 1, 2))
+        if self.stride > 1:
+            patches = patches[::self.stride, ::self.stride, ...]
+
+        feature_map = np.sum(patches * flt, axis=(2, 3, 4)).squeeze()
 
         return feature_map
 
