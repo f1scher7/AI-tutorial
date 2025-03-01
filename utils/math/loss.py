@@ -29,7 +29,7 @@ def training_loss_derivative_func(y_true, y_pred, batch_size=None, training_loss
         return (y_pred - y_true) / (y_pred * (1 - y_pred))
     elif training_loss_func_name == 'categorical_cross_entropy' and batch_size is not None:
         y_pred = np.clip(y_pred, epsilon, 1 - epsilon)
-        return - y_true / y_pred
+        return y_true / y_pred
 
     return training_loss_derivative_funcs[training_loss_func_name](y_true, y_pred)
 
