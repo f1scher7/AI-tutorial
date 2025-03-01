@@ -36,7 +36,7 @@ def load_and_process_dataset():
 
         print(f"'{label}' {img_inc} images were processed")
 
-    data_reshaped = np.array(data, dtype=np.uint8).reshape(-1, 28, 28, 1)
+    data_reshaped = np.array(data, dtype=np.float32).reshape(-1, 28, 28, 1) / 255.
     label_one_hot = np.eye(10, dtype=np.uint8)[labels]
 
     print(data_reshaped.shape)
