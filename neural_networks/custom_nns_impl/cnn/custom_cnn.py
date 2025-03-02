@@ -1,9 +1,9 @@
 import numpy as np
 from time import perf_counter
-from neural_networks.custom_nn_types_impl.cnn.convolutional_layer import ConvolutionLayer
-from neural_networks.custom_nn_types_impl.cnn.max_pooling_layer import MaxPoolingLayer
-from neural_networks.custom_nn_types_impl.cnn.flatten_layer import FlattenLayer
-from neural_networks.custom_nn_types_impl.custom_dense_multi_layers import CustomDenseMultiLayerNN
+from neural_networks.custom_nns_impl.cnn.convolutional_layer import ConvolutionLayer
+from neural_networks.custom_nns_impl.cnn.max_pooling_layer import MaxPoolingLayer
+from neural_networks.custom_nns_impl.cnn.flatten_layer import FlattenLayer
+from neural_networks.custom_nns_impl.custom_dense_multi_layers import CustomDenseMultiLayerNN
 from enums import WeightsInitFuncName, ActivFuncName
 from utils.visualization import print_training_logs_nn, plot_training_losses
 from utils.utils import save_nn_model, load_saved_nn_model

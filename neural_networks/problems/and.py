@@ -1,5 +1,5 @@
 import numpy as np
-from neural_networks.custom_nn_types_impl.custom_dense_multi_layers import CustomDenseMultiLayerNN, load_custom_dense_multilayer_nn
+from neural_networks.custom_nns_impl.custom_dense_multi_layers import CustomDenseMultiLayerNN, load_custom_dense_multilayer_nn
 from env_loader import AND_SAVED_MODEL
 
 

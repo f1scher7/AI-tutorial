@@ -1,7 +1,7 @@
 import numpy as np
 from data_processing import load_processed_dataset
 from enums import ActivFuncName, WeightsInitFuncName, LossFuncName
-from neural_networks.custom_nn_types_impl.cnn.custom_cnn import CustomCnn, load_custom_cnn
+from neural_networks.custom_nns_impl.cnn.custom_cnn import CustomCnn, load_custom_cnn
 
 problem_name = 'DIGITS-CLASSIFICATION-problem'
 input_data, target = load_processed_dataset()
