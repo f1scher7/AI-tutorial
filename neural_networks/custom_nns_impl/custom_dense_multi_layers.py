@@ -34,6 +34,7 @@ class CustomDenseMultiLayerNN:
         self.momentum = momentum
         self.reg_type = reg_type
         self.reg_lambda = reg_lambda
+        self.is_train = is_train
 
         self.batch_size = input_data_norm.shape[0] if input_data_norm is not None else 1
         self.sequence_len = input_data_norm.shape[1] if input_data_norm is not None else None
@@ -48,7 +49,7 @@ class CustomDenseMultiLayerNN:
 
         self.is_weights_and_biases_init = False
 
-        if is_train:
+        if self.is_train:
             # adding weights for input -> hidden1 layer
             if self.features_size is not None:
                 self.init_weights_and_biases()
@@ -94,7 +95,7 @@ class CustomDenseMultiLayerNN:
 
 
     def forward_propagation(self):
-        if not self.is_weights_and_biases_init and self.features_size is not None:
+        if self.is_train and not self.is_weights_and_biases_init and self.features_size is not None:
             self.init_weights_and_biases()
             self.is_weights_and_biases_init = True
 
@@ -214,7 +215,7 @@ class CustomDenseMultiLayerNN:
 
 
     def save(self):
-        model_info = self.data_to_save
+        model_info = self.data_to_save()
 
         file_name = f'{self.problem_name}_CustomDenseMultiLayerNN'
 

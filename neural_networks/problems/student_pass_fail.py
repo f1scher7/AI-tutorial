@@ -23,8 +23,8 @@ data_norm_func_name = 'min_max'
 target_norm_params = None
 
 hidden_neurons_list = [32]
-activation_funcs_list = ['sigmoid', 'sigmoid']
-weights_initialization_types_list = ['xavier', 'xavier']
+activ_funcs_list = ['sigmoid', 'sigmoid']
+weights_init_types_list = ['xavier', 'xavier']
 
 training_loss_func_name = 'mse'
 
@@ -63,7 +63,7 @@ while True:
 # custom_dense_multilayer_nn = CustomDenseMultiLayerNN(
 #     problem_name=problem_name, input_data_norm=input_data_norm, target_norm=target_reshaped,
 #     data_norm_func_name=data_norm_func_name, input_data_norm_params=input_data_norm_params, target_norm_params=target_norm_params,
-#     hidden_neurons_list=hidden_neurons_list, activation_funcs_list=activation_funcs_list, weights_initialization_types_list=weights_initialization_types_list,
+#     hidden_neurons_list=hidden_neurons_list, activ_funcs_list=activ_funcs_list, weights_init_types_list=weights_init_types_list,
 #     training_loss_func_name=training_loss_func_name, epochs=epochs, learning_rate=learning_rate, momentum=momentum, reg_type=reg_type, reg_lambda=reg_lambda
 # )
 #
