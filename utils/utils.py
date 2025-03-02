@@ -6,7 +6,7 @@ from env_loader import SAVED_MODELS_PATH
 def save_nn_model(file_name, model_info):
     timestamp =datetime.now().strftime("%Y.%m.%d-%H:%M:%S")
 
-    file = f'{SAVED_MODELS_PATH}{file_name}_{timestamp}'
+    file = f'{SAVED_MODELS_PATH}/{file_name}_{timestamp}'
     np.save(file, model_info)
 
     print(f"{file_name} was saved to {file}")
